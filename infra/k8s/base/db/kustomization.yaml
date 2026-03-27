@@ -2,7 +2,22 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - init-scripts.configmap.yaml
-  - management-init-scripts.configmap.yaml
   - service.yaml
   - statefulset.yaml
+
+# Generate ConfigMaps from the canonical SQL / script files so we don't duplicate
+# their contents in checked-in k8s YAML. Paths are relative to this kustomization
+# file.
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: podverse-db-init-scripts
+    files:
+      - 00_init_database.sql=sources/main_00_init_database.sql
+      - 01-create-users.sh=sources/main_01-create-users.sh
+
+  - name: podverse-management-db-init-scripts
+    files:
+      - 01-create-users.sh=sources/mgmt_01-create-users.sh
+      - 00_init_management_database.sql=sources/mgmt_00_init_management_database.sql
