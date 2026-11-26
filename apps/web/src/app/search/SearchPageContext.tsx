@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useRef, useState } from 'react'
 
 import type {
   DTOChannel,
+  DTOItem,
   QueryParamsPodcastIndexSearchMedium,
   SearchPodcastsFeed,
 } from '@podverse/helpers';
@@ -32,6 +33,11 @@ interface SearchPageContextType {
   catalogPage: number;
   setCatalogPage: (page: number) => void;
   catalogTotalPages: number;
+  catalogItems: DTOItem[];
+  catalogItemPage: number;
+  setCatalogItemPage: (page: number) => void;
+  catalogItemTotalPages: number;
+  isItemLoading: boolean;
 }
 
 const SearchPageContext = createContext<SearchPageContextType | undefined>(undefined);
@@ -55,12 +61,18 @@ export const SearchPageContextProvider = ({
   const [catalogChannels, setCatalogChannels] = useState<DTOChannel[]>([]);
   const [catalogPage, setCatalogPage] = useState<number>(1);
   const [catalogTotalPages, setCatalogTotalPages] = useState<number>(1);
+  const [catalogItems, setCatalogItems] = useState<DTOItem[]>([]);
+  const [catalogItemPage, setCatalogItemPage] = useState<number>(1);
+  const [catalogItemTotalPages, setCatalogItemTotalPages] = useState<number>(1);
+  const [isItemLoading, setIsItemLoading] = useState<boolean>(false);
   const catalogRequestIdRef = useRef(0);
+  const catalogItemRequestIdRef = useRef(0);
   const apiRequestService = getApiRequestService();
 
   const setSearchParams = useCallback((params: SearchPageParams) => {
     setSearchParamsState(params);
     setCatalogPage(1);
+    setCatalogItemPage(1);
   }, []);
 
   useSortPref({
@@ -79,6 +91,8 @@ export const SearchPageContextProvider = ({
         setSearchResultFeeds([]);
         setCatalogChannels([]);
         setCatalogTotalPages(1);
+        setCatalogItems([]);
+        setCatalogItemTotalPages(1);
       } else if (isCatalogSearch) {
         try {
           const response = await apiRequestService.reqChannelSearchByTitle({
@@ -123,6 +137,52 @@ export const SearchPageContextProvider = ({
     fetchSearchResults();
   }, [searchParams, catalogPage]);
 
+  useSkipInitialEffect(() => {
+    async function fetchCatalogItems() {
+      catalogItemRequestIdRef.current += 1;
+      const requestId = catalogItemRequestIdRef.current;
+      const trimmedQ = searchParams.q.trim();
+      if (!isCatalogSearch || !trimmedQ) {
+        setCatalogItems([]);
+        setCatalogItemTotalPages(1);
+        setIsItemLoading(false);
+        return;
+      }
+      setIsItemLoading(true);
+      try {
+        const response = await apiRequestService.reqItemSearchByTitle({
+          q: trimmedQ,
+          medium: searchParams.medium,
+          page: catalogItemPage,
+        });
+        if (requestId !== catalogItemRequestIdRef.current) {
+          return;
+        }
+        setCatalogItems(response.data);
+        setCatalogItemTotalPages(
+          getTotalPages(
+            response.meta.count,
+            response.meta.limit,
+            response.data.length,
+            catalogItemPage
+          )
+        );
+      } catch (error) {
+        if (requestId !== catalogItemRequestIdRef.current) {
+          return;
+        }
+        console.error('Error fetching catalog item search results:', error);
+        setCatalogItems([]);
+        setCatalogItemTotalPages(1);
+      } finally {
+        if (requestId === catalogItemRequestIdRef.current) {
+          setIsItemLoading(false);
+        }
+      }
+    }
+    fetchCatalogItems();
+  }, [searchParams, catalogItemPage, isCatalogSearch]);
+
   return (
     <SearchPageContext.Provider
       value={{
@@ -137,6 +197,11 @@ export const SearchPageContextProvider = ({
         catalogPage,
         setCatalogPage,
         catalogTotalPages,
+        catalogItems,
+        catalogItemPage,
+        setCatalogItemPage,
+        catalogItemTotalPages,
+        isItemLoading,
       }}
     >
       {children}

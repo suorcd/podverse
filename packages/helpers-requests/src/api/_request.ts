@@ -234,6 +234,7 @@ import {
   reqItemGetManyForQueueByPubDate,
   reqItemGetManyForQueueBySeason,
   reqItemParseAndGetChapters,
+  reqItemSearchByTitle,
 } from './item/item.js';
 import { reqItemChapterGetByIdText } from './itemChapter/itemChapter.js';
 import {
@@ -1268,6 +1269,14 @@ export class ApiRequestService {
 
   reqItemDescriptionGetByIdOrIdText(idOrIdText: string) {
     return reqItemDescriptionGetByIdOrIdText(this, idOrIdText);
+  }
+
+  reqItemSearchByTitle(params: {
+    q: string;
+    medium: QueryParamsPodcastIndexSearchMedium;
+    page: number;
+  }) {
+    return reqItemSearchByTitle(this, params);
   }
 
   reqItemGetMany(params: QueryParamsGetManyPartial) {

@@ -3,6 +3,7 @@ import type {
   DTOItemChapter,
   DTOItemDescriptionDetail,
   DTOItemQueueItem,
+  QueryParamsPodcastIndexSearchMedium,
 } from '@podverse/helpers';
 
 import type { ApiRequestService } from '../_request.js';
@@ -28,6 +29,20 @@ export async function reqItemGetByIdOrIdText(api: ApiRequestService, idOrIdText:
   return api.apiRequest<DTOItem>({
     path: `/item/${idOrIdText}`,
     method: 'GET',
+  });
+}
+
+/** Title search over stored items. Only an instance with a Podcast Index id allowlist answers. */
+export async function reqItemSearchByTitle(
+  api: ApiRequestService,
+  params: { q: string; medium: QueryParamsPodcastIndexSearchMedium; page: number }
+) {
+  return api.apiRequest<ApiListResponse<DTOItem>>({
+    path: '/item/search/title',
+    method: 'GET',
+    config: {
+      params,
+    },
   });
 }
 

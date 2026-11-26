@@ -1,3 +1,4 @@
+import { config } from '@api/config/index.js';
 import { handleReturnDataOrNotFound } from '@api/controllers/helpers/data.js';
 import { handleGenericErrorResponse } from '@api/controllers/helpers/error.js';
 import { sendMergedInto } from '@api/controllers/helpers/mergedInto.js';
@@ -13,6 +14,7 @@ import { getStatsOrder } from '@api/lib/stats.js';
 import {
   idOrIdTextParamSchema,
   itemIdTextParamSchema,
+  itemTitleSearchQuerySchema,
   mediumCategoryPageQuerySchema,
   mediumCategoryPageRangeQuerySchema,
   mediumPageQuerySchema,
@@ -34,6 +36,7 @@ import type {
   DTOChannelGone,
   DTOItemDescriptionDetail,
   QueryParamsMedium,
+  QueryParamsPodcastIndexSearchMedium,
   StatsPopularityCountField,
 } from '@podverse/helpers';
 import {
@@ -440,6 +443,39 @@ export class ItemController {
         const response: ApiListResponse<Item> = {
           data: lookahead.rows,
           meta: { page, count: lookahead.count, limit },
+        };
+        res.json(response);
+      } catch (error) {
+        handleGenericErrorResponse(res, error);
+      }
+    });
+  }
+
+  /**
+   * Title search over stored active items. Answers only while the Podcast Index id allowlist is
+   * set; the title match uses the trigram index added with the route.
+   */
+  static async searchByTitle(req: Request, res: Response): Promise<void> {
+    if (config.catalog.podcastIndexIdAllowlist === null) {
+      res.status(404).json({ message: 'Not found' });
+      return;
+    }
+    validateQueryObject(Joi.object(itemTitleSearchQuerySchema), req, res, async () => {
+      try {
+        const { page, limit, offset } = getPaginationParams(req);
+        const { q, medium } = req.query as {
+          q: string;
+          medium: QueryParamsPodcastIndexSearchMedium;
+        };
+        const { items, count } = await ItemController.itemService.searchByTitle({
+          term: q,
+          mediumType: medium === 'music' ? 'music' : 'av',
+          offset,
+          limit,
+        });
+        const response: ApiListResponse<Item> = {
+          data: items,
+          meta: { page, count, limit },
         };
         res.json(response);
       } catch (error) {

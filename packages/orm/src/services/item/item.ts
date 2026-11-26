@@ -59,6 +59,14 @@ type ItemGetByDto = {
   guid_enclosure_url: string | null;
 };
 
+/** Escapes `\`, `%`, and `_` so a search term matches literally inside a LIKE pattern. */
+const escapeLikePattern = (term: string): string => term.replace(/[\\%_]/g, (char) => `\\${char}`);
+
+export type ItemTitleSearchPage = {
+  items: Item[];
+  count: number;
+};
+
 /** TypeORM v1 rejects nullable columns (e.g. channel.slug) in relation-object where clauses. */
 function findWhereChannelId(channel: Channel): FindOptionsWhere<Channel> {
   return { id: channel.id };
@@ -392,6 +400,76 @@ export class ItemService {
       ...config,
       where,
     });
+  }
+
+  /**
+   * Active normal items whose title contains the term, case-insensitive. Uses the same public
+   * visibility rules as item lists: the channel has channel_about and its feed is public.
+   * Titles that start with the term come first, then the newest publish date, then the highest
+   * id, so every page is disjoint.
+   */
+  async searchByTitle(args: {
+    term: string;
+    mediumType: QueryParamsMedium;
+    offset: number;
+    limit: number;
+  }): Promise<ItemTitleSearchPage> {
+    const term = args.term.trim();
+    if (term === '') {
+      return { items: [], count: 0 };
+    }
+    const escaped = escapeLikePattern(term);
+    const medium_ids = getMediumIdArrayFromType(args.mediumType);
+
+    const matching = this.repositoryRead
+      .createQueryBuilder('item')
+      .innerJoin('item.channel', 'channel')
+      .innerJoin('channel.channel_about', 'channel_about')
+      .innerJoin('channel.feed', 'feed')
+      .innerJoin('feed.feed_policy', 'feed_policy')
+      .innerJoin('item.item_flag_status', 'item_flag_status')
+      .leftJoin('item.live_item', 'live_item')
+      .where('feed_policy.public_visible = :publicVisible', { publicVisible: true })
+      .andWhere('item_flag_status.id = :activeStatus', {
+        activeStatus: ItemFlagStatusStatusEnum.Active,
+      })
+      .andWhere('live_item.id IS NULL')
+      .andWhere('item.title ILIKE :contains', { contains: `%${escaped}%` });
+    if (medium_ids !== null) {
+      matching.andWhere('channel.medium_id IN (:...medium_ids)', { medium_ids });
+    }
+
+    const count = await matching.clone().getCount();
+    if (count === 0 || args.offset >= count) {
+      return { items: [], count };
+    }
+
+    const rows = await matching
+      .clone()
+      .select('item.id', 'id')
+      .addSelect('CASE WHEN item.title ILIKE :prefix THEN 0 ELSE 1 END', 'title_rank')
+      .setParameter('prefix', `${escaped}%`)
+      .orderBy('title_rank', 'ASC')
+      .addOrderBy('item.pub_date', 'DESC', 'NULLS LAST')
+      .addOrderBy('item.id', 'DESC')
+      .offset(args.offset)
+      .limit(args.limit)
+      .getRawMany<{ id: number | string; title_rank: number | string }>();
+    const ids = rows.map((row) => Number(row.id));
+    if (ids.length === 0) {
+      return { items: [], count };
+    }
+
+    const loaded = await this.repositoryRead.find({
+      where: { id: In(ids) },
+      relations: itemGetManyRelationsWithChannel,
+    });
+    const byId = new Map(loaded.map((item) => [item.id, item]));
+    const items = ids
+      .map((id) => byId.get(id))
+      .filter((item): item is Item => item !== undefined);
+
+    return { items, count };
   }
 
   async getManyByPodcastGuidAndItemGuid(

@@ -38,6 +38,7 @@ router.get('/queue/season/:idText', asyncHandler(ItemController.getManyForQueueB
 
 router.get('/global/recent', asyncHandler(ItemController.getManyGlobalRecent));
 router.get('/global/top', asyncHandler(ItemController.getManyGlobalTop));
+router.get('/search/title', asyncHandler(ItemController.searchByTitle));
 
 router.get('/category/recent', asyncHandler(ItemController.getManyCategoryRecent));
 router.get('/category/top', asyncHandler(ItemController.getManyCategoryTop));

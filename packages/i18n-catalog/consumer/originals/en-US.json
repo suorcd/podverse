@@ -68,7 +68,11 @@
       "search": "Search",
       "search_by_title": "Search by Title...",
       "empty_prompt": "Search the Podcast Index by title.",
-      "no_results": "No Results Found"
+      "no_results": "No Results Found",
+      "shows": "Shows",
+      "albums": "Albums",
+      "episodes": "Episodes",
+      "tracks": "Tracks"
     },
     "add_feed": {
       "add_feed": "Add Feed",

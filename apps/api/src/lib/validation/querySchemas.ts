@@ -166,6 +166,14 @@ export const channelTitleSearchQuerySchema = {
   page: Joi.number().integer().min(1).required(),
 };
 
+export const itemTitleSearchQuerySchema = {
+  q: Joi.string().trim().min(1).max(255).required(),
+  medium: Joi.string()
+    .valid(...QUERY_PARAMS_PODCAST_INDEX_SEARCH_MEDIUMS)
+    .default('all'),
+  page: Joi.number().integer().min(1).required(),
+};
+
 export const positionBetweenBodySchema = {
   position1: Joi.number().min(0).required(),
   position2: Joi.number().min(Joi.ref('position1')).required(),

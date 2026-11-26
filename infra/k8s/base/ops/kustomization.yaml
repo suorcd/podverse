@@ -25,8 +25,8 @@ resources:
 configMapGenerator:
   - name: podverse-ops-migration-scripts
     literals:
-      - MIGRATION_BUNDLE_SHA=linear-migrations-v1
-      - API_EXPECTED_MIGRATION_FILENAME=0021_catalog_podcast_index_allowlist.sql
+      - MIGRATION_BUNDLE_SHA=linear-migrations-v2
+      - API_EXPECTED_MIGRATION_FILENAME=0022_item_title_search.sql
       - MANAGEMENT_API_EXPECTED_MIGRATION_FILENAME=0002_nano_id_v2_min_7.sql
     files:
       - source/database/runner/run-linear-migrations.sh
@@ -62,6 +62,7 @@ configMapGenerator:
       - source/database/linear-migrations/app/0019_drop_channel_has_podcast_index_value.sql
       - source/database/linear-migrations/app/0020_account_queue_history_limit_notice_limit.sql
       - source/database/linear-migrations/app/0021_catalog_podcast_index_allowlist.sql
+      - source/database/linear-migrations/app/0022_item_title_search.sql
   - name: podverse-ops-management-linear-migrations
     options:
       annotations:
