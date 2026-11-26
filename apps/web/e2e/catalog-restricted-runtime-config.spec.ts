@@ -16,7 +16,12 @@ test.describe('Catalog-restricted lane runtime config', () => {
         return typeof value === 'string' ? value : '';
       };
 
-      const empty = { musicDisabled: '', addByRSSDisabled: '', allowlist: '' };
+      const empty = {
+        musicDisabled: '',
+        addByRSSDisabled: '',
+        allowlist: '',
+        itemTitleSearchEnabled: '',
+      };
       const runtimeConfig: unknown = Reflect.get(globalThis, '__PODVERSE_RUNTIME_CONFIG__');
       if (typeof runtimeConfig !== 'object' || runtimeConfig === null) {
         return empty;
@@ -29,12 +34,17 @@ test.describe('Catalog-restricted lane runtime config', () => {
         musicDisabled: readRuntimeString(env, 'NEXT_PUBLIC_CATALOG_MUSIC_DISABLED'),
         addByRSSDisabled: readRuntimeString(env, 'NEXT_PUBLIC_CATALOG_ADD_BY_RSS_DISABLED'),
         allowlist: readRuntimeString(env, 'NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST'),
+        itemTitleSearchEnabled: readRuntimeString(
+          env,
+          'NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED'
+        ),
       };
     });
 
     expect(catalogRuntime.musicDisabled).toBe('true');
     expect(catalogRuntime.addByRSSDisabled).toBe('true');
     expect(catalogRuntime.allowlist).toBe(E2E_CATALOG_RESTRICTED_PODCAST_INDEX_IDS.join(','));
+    expect(catalogRuntime.itemTitleSearchEnabled).toBe('true');
 
     await capturePageLoad(
       page,

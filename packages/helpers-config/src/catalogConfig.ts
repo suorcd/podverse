@@ -10,6 +10,8 @@ export type CatalogConfig = {
   addByRSSEnabled: boolean;
   /** Null when no allowlist is set. Otherwise the Podcast Index feed ids the instance adds. */
   podcastIndexIdAllowlist: readonly number[] | null;
+  /** True only when `<prefix>CATALOG_ITEM_TITLE_SEARCH_ENABLED` is `true`. Off by default. */
+  itemTitleSearchEnabled: boolean;
 };
 
 /** `''` for the API and the workers; `'NEXT_PUBLIC_'` for the web app and its sidecar. */
@@ -86,6 +88,8 @@ export function buildCatalogConfigFromEnv(
     podcastIndexIdAllowlist: parseCatalogPodcastIndexIdAllowlist(
       readRaw(env, `${prefix}CATALOG_PODCAST_INDEX_ID_ALLOWLIST`)
     ),
+    itemTitleSearchEnabled:
+      readRaw(env, `${prefix}CATALOG_ITEM_TITLE_SEARCH_ENABLED`)?.trim() === 'true',
   };
 }
 
@@ -114,6 +118,41 @@ export function validateCatalogDisabledFlag(env: EnvSource, key: string): Valida
       isValid: true,
       isRequired: false,
       message: 'Set to false (on)',
+    });
+  }
+  return catalogResult(key, {
+    isSet: true,
+    isValid: false,
+    isRequired: true,
+    message: `Invalid value: "${raw}" - must be "true" or "false"`,
+  });
+}
+
+export function validateCatalogEnabledFlag(env: EnvSource, key: string): ValidationResult {
+  const raw = readRaw(env, key);
+  if (!hasText(raw)) {
+    return catalogResult(key, {
+      isSet: false,
+      isValid: true,
+      isRequired: false,
+      message: 'Blank (off)',
+    });
+  }
+  const trimmed = raw.trim();
+  if (trimmed === 'true') {
+    return catalogResult(key, {
+      isSet: true,
+      isValid: true,
+      isRequired: false,
+      message: 'Set to true (on)',
+    });
+  }
+  if (trimmed === 'false') {
+    return catalogResult(key, {
+      isSet: true,
+      isValid: true,
+      isRequired: false,
+      message: 'Set to false (off)',
     });
   }
   return catalogResult(key, {
@@ -174,5 +213,6 @@ export function validateCatalogEnv(
     validateCatalogDisabledFlag(env, `${prefix}CATALOG_MUSIC_DISABLED`),
     validateCatalogDisabledFlag(env, `${prefix}CATALOG_ADD_BY_RSS_DISABLED`),
     validateCatalogPodcastIndexIdAllowlist(env, `${prefix}CATALOG_PODCAST_INDEX_ID_ALLOWLIST`),
+    validateCatalogEnabledFlag(env, `${prefix}CATALOG_ITEM_TITLE_SEARCH_ENABLED`),
   ];
 }

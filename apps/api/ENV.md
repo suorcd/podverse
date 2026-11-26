@@ -344,6 +344,9 @@ served as before.
   that the directory moved follow the stored show. Blank keeps the open directory and the
   Podcast Index search. Management can add more ids while this list is set; those ids stay
   refused on the public add route.
+- **`CATALOG_ITEM_TITLE_SEARCH_ENABLED`** — `\"true\"` or `\"false\"` if set. Blank keeps stored
+  item title search off. `\"true\"` enables `GET /item/search/title` and the Search page
+  Episodes/Tracks section. The allowlist must also be set.
 
 ### Add-by-RSS
 
@@ -383,7 +386,8 @@ Variables whose names end with `_EXPIRATION`, or that contain `PORT`, are automa
 - **User-Agent Format**: `USER_AGENT` must be set and follow `BrandName Bot Environment/AppName/Version` and include "Bot" in the first part
 - **CORS Origins**: `API_ALLOWED_CORS_ORIGINS` must contain at least one origin (comma-separated)
 - **Catalog**: `CATALOG_MUSIC_DISABLED` and `CATALOG_ADD_BY_RSS_DISABLED` must be `"true"` or
-  `"false"` if set; `CATALOG_PODCAST_INDEX_ID_ALLOWLIST` must be comma-separated positive integers.
+  `"false"` if set; `CATALOG_ITEM_TITLE_SEARCH_ENABLED` must be `"true"` or `"false"` if set;
+  `CATALOG_PODCAST_INDEX_ID_ALLOWLIST` must be comma-separated positive integers.
   An invalid value stops the API at startup.
 
 ## Validation Output

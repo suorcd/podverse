@@ -4,8 +4,8 @@ import { E2E_CATALOG_RESTRICTED_PODCAST_INDEX_IDS } from './e2e/helpers/catalogR
 import { buildE2eWebServers } from './playwright.e2e-webservers';
 
 /**
- * Catalog-restricted lane: Music off, Add by RSS off, and a Podcast Index id
- * allowlist on the web sidecar and the API (see e2e/helpers/catalogRestricted.ts).
+ * Catalog-restricted lane: Music off, Add by RSS off, a Podcast Index id
+ * allowlist, and item title search on, on the web sidecar and the API (see e2e/helpers/catalogRestricted.ts).
  */
 export default defineConfig({
   testDir: './e2e',
@@ -21,6 +21,7 @@ export default defineConfig({
       musicDisabled: true,
       addByRSSDisabled: true,
       podcastIndexIdAllowlist: E2E_CATALOG_RESTRICTED_PODCAST_INDEX_IDS,
+      itemTitleSearchEnabled: true,
     },
   }),
   use: {

@@ -17602,7 +17602,8 @@ paths:
         the allowlist are returned too. Titles that start with
         the term come before titles that only contain it; within each group, the newest publish
         date comes first. `meta.count` is the total number of matches. With no allowlist the route
-        answers 404.
+        answers 404. The route is also off by default behind `CATALOG_ITEM_TITLE_SEARCH_ENABLED`;
+        set it to `true` to enable it.
       security: []
       parameters:
         - in: query

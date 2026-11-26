@@ -4,6 +4,7 @@ import {
   buildCatalogConfigFromEnv,
   parseCatalogPodcastIndexIdAllowlist,
   validateCatalogDisabledFlag,
+  validateCatalogEnabledFlag,
   validateCatalogEnv,
   validateCatalogPodcastIndexIdAllowlist,
 } from './catalogConfig.js';
@@ -12,6 +13,7 @@ const openCatalog = {
   musicEnabled: true,
   addByRSSEnabled: true,
   podcastIndexIdAllowlist: null,
+  itemTitleSearchEnabled: false,
 };
 
 describe('parseCatalogPodcastIndexIdAllowlist', () => {
@@ -60,6 +62,7 @@ describe('buildCatalogConfigFromEnv', () => {
       musicEnabled: false,
       addByRSSEnabled: false,
       podcastIndexIdAllowlist: null,
+      itemTitleSearchEnabled: false,
     });
     expect(
       buildCatalogConfigFromEnv(
@@ -74,6 +77,24 @@ describe('buildCatalogConfigFromEnv', () => {
       buildCatalogConfigFromEnv({ CATALOG_PODCAST_INDEX_ID_ALLOWLIST: '920666,41504' }, '')
         .podcastIndexIdAllowlist
     ).toEqual([920666, 41504]);
+  });
+
+  it('keeps item title search off unless its flag is the string true', () => {
+    expect(buildCatalogConfigFromEnv({}, '').itemTitleSearchEnabled).toBe(false);
+    expect(
+      buildCatalogConfigFromEnv({ CATALOG_ITEM_TITLE_SEARCH_ENABLED: 'false' }, '')
+        .itemTitleSearchEnabled
+    ).toBe(false);
+    expect(
+      buildCatalogConfigFromEnv({ CATALOG_ITEM_TITLE_SEARCH_ENABLED: 'true' }, '')
+        .itemTitleSearchEnabled
+    ).toBe(true);
+    expect(
+      buildCatalogConfigFromEnv(
+        { NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED: 'true' },
+        'NEXT_PUBLIC_'
+      ).itemTitleSearchEnabled
+    ).toBe(true);
   });
 
   it('reads only the keys for the given prefix', () => {
@@ -138,6 +159,51 @@ describe('validateCatalogDisabledFlag', () => {
   });
 });
 
+describe('validateCatalogEnabledFlag', () => {
+  const key = 'CATALOG_ITEM_TITLE_SEARCH_ENABLED';
+
+  it('accepts blank, true, and false', () => {
+    expect(validateCatalogEnabledFlag({}, key)).toEqual({
+      name: key,
+      isSet: false,
+      isValid: true,
+      isRequired: false,
+      message: 'Blank (off)',
+      category: 'Catalog',
+    });
+    expect(validateCatalogEnabledFlag({ [key]: '   ' }, key).isValid).toBe(true);
+    expect(validateCatalogEnabledFlag({ [key]: 'true' }, key)).toEqual({
+      name: key,
+      isSet: true,
+      isValid: true,
+      isRequired: false,
+      message: 'Set to true (on)',
+      category: 'Catalog',
+    });
+    expect(validateCatalogEnabledFlag({ [key]: 'false' }, key)).toEqual({
+      name: key,
+      isSet: true,
+      isValid: true,
+      isRequired: false,
+      message: 'Set to false (off)',
+      category: 'Catalog',
+    });
+  });
+
+  it('rejects other spellings', () => {
+    for (const value of ['yes', 'TRUE']) {
+      expect(validateCatalogEnabledFlag({ [key]: value }, key)).toEqual({
+        name: key,
+        isSet: true,
+        isValid: false,
+        isRequired: true,
+        message: `Invalid value: "${value}" - must be "true" or "false"`,
+        category: 'Catalog',
+      });
+    }
+  });
+});
+
 describe('validateCatalogPodcastIndexIdAllowlist', () => {
   const key = 'CATALOG_PODCAST_INDEX_ID_ALLOWLIST';
 
@@ -184,16 +250,18 @@ describe('validateCatalogPodcastIndexIdAllowlist', () => {
 });
 
 describe('validateCatalogEnv', () => {
-  it('returns the music flag, the Add by RSS flag, and the allowlist', () => {
+  it('returns the music flag, the Add by RSS flag, the allowlist, and the item title search flag', () => {
     expect(validateCatalogEnv({}, '').map((result) => result.name)).toEqual([
       'CATALOG_MUSIC_DISABLED',
       'CATALOG_ADD_BY_RSS_DISABLED',
       'CATALOG_PODCAST_INDEX_ID_ALLOWLIST',
+      'CATALOG_ITEM_TITLE_SEARCH_ENABLED',
     ]);
     expect(validateCatalogEnv({}, 'NEXT_PUBLIC_').map((result) => result.name)).toEqual([
       'NEXT_PUBLIC_CATALOG_MUSIC_DISABLED',
       'NEXT_PUBLIC_CATALOG_ADD_BY_RSS_DISABLED',
       'NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST',
+      'NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED',
     ]);
   });
 });

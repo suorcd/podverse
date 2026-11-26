@@ -164,14 +164,35 @@ describe('Stored item title search', () => {
     return item.id_text;
   }
 
-  async function withAllowlist(run: () => Promise<void>): Promise<void> {
+  async function withAllowlist(
+    run: () => Promise<void>,
+    itemTitleSearchEnabled = true
+  ): Promise<void> {
     if (!config) {
       throw new Error('Config required');
     }
     const active = config;
     const saved = active.catalog;
     // An id no seeded feed has, so matches are not limited to the allowlist.
-    active.catalog = { ...saved, podcastIndexIdAllowlist: [nextPodcastIndexId()] };
+    active.catalog = {
+      ...saved,
+      podcastIndexIdAllowlist: [nextPodcastIndexId()],
+      itemTitleSearchEnabled,
+    };
+    try {
+      await run();
+    } finally {
+      active.catalog = saved;
+    }
+  }
+
+  async function withItemSearchEnabled(run: () => Promise<void>): Promise<void> {
+    if (!config) {
+      throw new Error('Config required');
+    }
+    const active = config;
+    const saved = active.catalog;
+    active.catalog = { ...saved, itemTitleSearchEnabled: true };
     try {
       await run();
     } finally {
@@ -295,13 +316,23 @@ describe('Stored item title search', () => {
   });
 
   it('Title search answers 404 while the allowlist is unset.', async () => {
-    const withQuery = await request(requireApp()).get(searchUrl).query({ q: token, page: 1 });
-    expect(withQuery.status).toBe(404);
-    expect(withQuery.body).toEqual({ message: 'Not found' });
+    await withItemSearchEnabled(async () => {
+      const withQuery = await request(requireApp()).get(searchUrl).query({ q: token, page: 1 });
+      expect(withQuery.status).toBe(404);
+      expect(withQuery.body).toEqual({ message: 'Not found' });
 
-    const withoutQuery = await request(requireApp()).get(searchUrl);
-    expect(withoutQuery.status).toBe(404);
-    expect(withoutQuery.body).toEqual({ message: 'Not found' });
+      const withoutQuery = await request(requireApp()).get(searchUrl);
+      expect(withoutQuery.status).toBe(404);
+      expect(withoutQuery.body).toEqual({ message: 'Not found' });
+    });
+  });
+
+  it('Title search answers 404 while the flag is off, even with an allowlist set.', async () => {
+    await withAllowlist(async () => {
+      const res = await request(requireApp()).get(searchUrl).query({ q: token, page: 1 });
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual({ message: 'Not found' });
+    }, false);
   });
 
   it('Titles that start with the term come before titles that contain it, newest publish date first.', async () => {

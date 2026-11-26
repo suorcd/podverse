@@ -74,7 +74,7 @@ These variables are used for client-side API requests:
 - **`NEXT_PUBLIC_WEB_DOMAIN`** (Required) - Web domain (e.g., `localhost:3002` or `podverse.fm`)
 
 The catalog keys below narrow what this instance adds and offers. Each is optional and works
-alone; leave all three blank for the full site. They limit what gets added from now on: content
+alone; leave all four blank for the full site. They limit what gets added from now on: content
 already stored keeps its pages, rows, embeds, and playback. Keep each value equal to the API and
 workers `CATALOG_*` key of the same name; one shared ConfigMap (`podverse-catalog-config`) or one
 local override (`catalog.env`) sets all of them. A change takes effect when the web server
@@ -94,6 +94,9 @@ restarts, with no rebuild.
   on the list, and the Podcast Index Add Feed button and its on-demand add are off. Shows already
   stored keep their pages, episodes, clips, chapters, livestreams, and embeds. A feed with no
   Podcast Index id is outside the list. There is no size limit. Example: `"920666,41504"`.
+- **`NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED`** (Optional) - `"true"` or `"false"` if set.
+  Blank keeps stored item title search off. `"true"` enables the Search page Episodes/Tracks
+  section. The API allowlist must also be set.
 
 ### App / General
 
@@ -227,7 +230,8 @@ Variables containing `PORT` or `INTERVAL` are validated to ensure they are valid
 - **Theme Default**: `NEXT_PUBLIC_DEFAULT_THEME` must be one of the valid themes
 - **Locale Validation**: `NEXT_PUBLIC_FEATURES_SUPPORTED_LOCALES` must be `"all-available"` or a comma-delimited list of valid locales
 - **Locale Default**: `NEXT_PUBLIC_FEATURES_DEFAULT_LOCALE` must be a valid locale
-- **Catalog**: the two `NEXT_PUBLIC_CATALOG_*_DISABLED` keys must be `"true"` or `"false"` if set,
+- **Catalog**: the two `NEXT_PUBLIC_CATALOG_*_DISABLED` keys and
+  `NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED` must be `"true"` or `"false"` if set,
   and `NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST` must be comma-separated positive integers.
   An invalid catalog value stops the sidecar at startup.
 

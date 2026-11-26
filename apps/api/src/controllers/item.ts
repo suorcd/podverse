@@ -453,10 +453,14 @@ export class ItemController {
 
   /**
    * Title search over stored active items. Answers only while the Podcast Index id allowlist is
-   * set; the title match uses the trigram index added with the route.
+   * set and the item title search flag is on; the title match uses the trigram index added with
+   * the route.
    */
   static async searchByTitle(req: Request, res: Response): Promise<void> {
-    if (config.catalog.podcastIndexIdAllowlist === null) {
+    if (
+      config.catalog.podcastIndexIdAllowlist === null ||
+      !config.catalog.itemTitleSearchEnabled
+    ) {
       res.status(404).json({ message: 'Not found' });
       return;
     }

@@ -17,6 +17,7 @@ import {
   isAllowedCustomThemesUrl,
   isPodverseStartupValidationSilent,
   validateCatalogDisabledFlag,
+  validateCatalogEnabledFlag,
   validateCatalogPodcastIndexIdAllowlist,
   validateDefaultTheme,
   validateLocale,
@@ -87,6 +88,7 @@ const optionalKeys = [
   'NEXT_PUBLIC_BROWSE_DEFAULT_SORT',
   'NEXT_PUBLIC_BROWSE_DEFAULT_VIEW',
   'NEXT_PUBLIC_CATALOG_ADD_BY_RSS_DISABLED',
+  'NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED',
   'NEXT_PUBLIC_CATALOG_MUSIC_DISABLED',
   'NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST',
   'NEXT_PUBLIC_HOME_DEFAULT_CHIP',
@@ -394,6 +396,9 @@ function validateOne(key: string, isRequired: boolean): ValidationResult {
   if (key === 'NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST') {
     return validateCatalogPodcastIndexIdAllowlist(process.env, key);
   }
+  if (key === 'NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED') {
+    return validateCatalogEnabledFlag(process.env, key);
+  }
   if (isRequired) {
     return validateRequired(key, category);
   }
@@ -420,6 +425,7 @@ function getCategory(key: string): string {
     NEXT_PUBLIC_HOME_DEFAULT_SORT: 'Lists',
     NEXT_PUBLIC_HOME_DEFAULT_VIEW: 'Lists',
     NEXT_PUBLIC_CATALOG_MUSIC_DISABLED: 'Catalog',
+    NEXT_PUBLIC_CATALOG_ITEM_TITLE_SEARCH_ENABLED: 'Catalog',
     NEXT_PUBLIC_CATALOG_PODCAST_INDEX_ID_ALLOWLIST: 'Catalog',
     NEXT_PUBLIC_COOKIE_CONSENT_BANNER_ENABLED: 'Legal',
     NEXT_PUBLIC_LEGAL_NAME: 'Legal',

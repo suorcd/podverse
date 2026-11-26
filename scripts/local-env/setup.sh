@@ -635,7 +635,7 @@ done
 
 # From catalog.env: one value per setting for the API, workers, and web sidecars. A key the
 # override defines is authoritative, so a blank value there restores the full site.
-for v in CATALOG_MUSIC_DISABLED CATALOG_ADD_BY_RSS_DISABLED CATALOG_PODCAST_INDEX_ID_ALLOWLIST; do
+for v in CATALOG_MUSIC_DISABLED CATALOG_ADD_BY_RSS_DISABLED CATALOG_PODCAST_INDEX_ID_ALLOWLIST CATALOG_ITEM_TITLE_SEARCH_ENABLED; do
 	if [ -n "${!v+set}" ]; then
 		for file in "${API_AND_WORKERS_ENV_FILES[@]}"; do
 			upsert_var "$file" "$v" "${!v}"

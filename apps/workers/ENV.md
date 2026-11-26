@@ -344,6 +344,9 @@ shared `podverse-catalog-config` ConfigMap sets them together.
   listed id was merged into another show, workers add the surviving show and remember that id.
   Stored shows stay and keep refreshing as the parser decides. A blank list does nothing and
   does not delete allowlist rows.
+- **`CATALOG_ITEM_TITLE_SEARCH_ENABLED`** — `"true"` or `"false"` if set. Workers validate it but
+  do not read it. `"true"` enables stored item title search on the API and the web Search page;
+  the allowlist must also be set.
 
 `mqRSSAddCatalogAllowlist` runs every 15 minutes from the `mq-rss-add-catalog-allowlist` CronJob.
 A run that is already caught up compares stored ids and returns without directory lookups.

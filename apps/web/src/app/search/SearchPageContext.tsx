@@ -57,7 +57,9 @@ export const SearchPageContextProvider = ({
   });
   const [searchResultFeeds, setSearchResultFeeds] = useState<SearchPodcastsFeed[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const isCatalogSearch = useConfig().public.catalog.podcastIndexIdAllowlist !== null;
+  const catalogConfig = useConfig().public.catalog;
+  const isCatalogSearch = catalogConfig.podcastIndexIdAllowlist !== null;
+  const isCatalogItemSearch = isCatalogSearch && catalogConfig.itemTitleSearchEnabled;
   const [catalogChannels, setCatalogChannels] = useState<DTOChannel[]>([]);
   const [catalogPage, setCatalogPage] = useState<number>(1);
   const [catalogTotalPages, setCatalogTotalPages] = useState<number>(1);
@@ -142,7 +144,7 @@ export const SearchPageContextProvider = ({
       catalogItemRequestIdRef.current += 1;
       const requestId = catalogItemRequestIdRef.current;
       const trimmedQ = searchParams.q.trim();
-      if (!isCatalogSearch || !trimmedQ) {
+      if (!isCatalogItemSearch || !trimmedQ) {
         setCatalogItems([]);
         setCatalogItemTotalPages(1);
         setIsItemLoading(false);
@@ -181,7 +183,7 @@ export const SearchPageContextProvider = ({
       }
     }
     fetchCatalogItems();
-  }, [searchParams, catalogItemPage, isCatalogSearch]);
+  }, [searchParams, catalogItemPage, isCatalogItemSearch]);
 
   return (
     <SearchPageContext.Provider

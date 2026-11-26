@@ -22,6 +22,7 @@ export type E2eCatalogEnvOptions = {
   musicDisabled?: boolean;
   addByRSSDisabled?: boolean;
   podcastIndexIdAllowlist?: readonly number[];
+  itemTitleSearchEnabled?: boolean;
 };
 
 export type E2eWebSidecarEnvOptions = {
@@ -105,6 +106,7 @@ function buildE2eCatalogEnv(catalog: E2eCatalogEnvOptions | undefined): Record<s
     CATALOG_MUSIC_DISABLED: catalog?.musicDisabled === true ? 'true' : '',
     CATALOG_ADD_BY_RSS_DISABLED: catalog?.addByRSSDisabled === true ? 'true' : '',
     CATALOG_PODCAST_INDEX_ID_ALLOWLIST: catalog?.podcastIndexIdAllowlist?.join(',') ?? '',
+    CATALOG_ITEM_TITLE_SEARCH_ENABLED: catalog?.itemTitleSearchEnabled === true ? 'true' : '',
   };
 }
 
