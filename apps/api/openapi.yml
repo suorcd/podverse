@@ -14863,7 +14863,9 @@ paths:
       summary: GET /channel/search/title
       description: >-
         Public title search over stored directory channels, available only while the instance sets
-        a Podcast Index id allowlist (`CATALOG_PODCAST_INDEX_ID_ALLOWLIST`). Titles that start with
+        a Podcast Index id allowlist (`CATALOG_PODCAST_INDEX_ID_ALLOWLIST`). The allowlist gates
+        whether the route answers, not which results come back: stored channels on feeds outside
+        the allowlist are returned too. Titles that start with
         the term come before titles that only contain it; within each group, the newest last
         publish date comes first. `meta.count` is the total number of matches. With no allowlist
         the route answers 404.
@@ -17595,7 +17597,9 @@ paths:
       summary: GET /item/search/title
       description: >-
         Public title search over stored active items, available only while the instance sets a
-        Podcast Index id allowlist (`CATALOG_PODCAST_INDEX_ID_ALLOWLIST`). Titles that start with
+        Podcast Index id allowlist (`CATALOG_PODCAST_INDEX_ID_ALLOWLIST`). The allowlist gates
+        whether the route answers, not which results come back: stored items on feeds outside
+        the allowlist are returned too. Titles that start with
         the term come before titles that only contain it; within each group, the newest publish
         date comes first. `meta.count` is the total number of matches. With no allowlist the route
         answers 404.
