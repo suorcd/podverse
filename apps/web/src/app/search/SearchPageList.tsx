@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { CommonPodcastListNodes } from '../../components/Common/Podcast/CommonPodcastNodes';
 import { CommonEpisodeListNodes } from '../../components/Common/Podcast/Episode/CommonEpisodeNodes';
@@ -36,6 +36,7 @@ export const SearchPageList: React.FC = () => {
     setCatalogItemPage,
   } = useSearchPageContext();
   const isMusic = searchParams.medium === 'music';
+  const catalogItemsSectionRef = useRef<HTMLElement | null>(null);
   const resultCount = isCatalogSearch
     ? catalogChannels.length + catalogItems.length
     : searchResultFeeds.length;
@@ -49,7 +50,7 @@ export const SearchPageList: React.FC = () => {
 
   const handleCatalogItemPage = (page: number) => {
     setCatalogItemPage(page);
-    scrollMainToTop();
+    catalogItemsSectionRef.current?.scrollIntoView({ block: 'start' });
   };
 
   let results: React.ReactNode;
@@ -84,7 +85,7 @@ export const SearchPageList: React.FC = () => {
           </section>
         ) : null}
         {catalogItems.length > 0 ? (
-          <section className={styles.section}>
+          <section ref={catalogItemsSectionRef} className={styles.section}>
             <h2 className={styles.sectionTitle}>
               {isMusic ? tFeatures('search.tracks') : tFeatures('search.episodes')}
             </h2>
