@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CI bootstrap contract check:
 # - Starts ephemeral Postgres with initdb scripts 0001/0002/0003 and baseline archives
-# - Verifies uuid-ossp, linear history presence, and critical reference rows
+# - Verifies uuid-ossp, pg_trgm (app only), linear history presence, and critical reference rows
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -115,6 +115,7 @@ check_query_or_false() {
 }
 
 app_ext="f"
+app_trgm="f"
 mgmt_ext="f"
 app_history="f"
 mgmt_history="f"
@@ -124,18 +125,19 @@ mgmt_roles="f"
 # be running, so wait for the actual bootstrap contract state before asserting.
 for attempt in $(seq 1 120); do
   app_ext="$(check_query_or_false "$DB_APP_OWNER_USER" "$DB_APP_OWNER_PASSWORD" "$DB_APP_NAME" "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='uuid-ossp');")"
+  app_trgm="$(check_query_or_false "$DB_APP_OWNER_USER" "$DB_APP_OWNER_PASSWORD" "$DB_APP_NAME" "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='pg_trgm');")"
   mgmt_ext="$(check_query_or_false "$DB_MANAGEMENT_OWNER_USER" "$DB_MANAGEMENT_OWNER_PASSWORD" "$DB_MANAGEMENT_NAME" "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='uuid-ossp');")"
   app_history="$(check_query_or_false "$DB_APP_OWNER_USER" "$DB_APP_OWNER_PASSWORD" "$DB_APP_NAME" "SELECT to_regclass('public.linear_migration_history') IS NOT NULL;")"
   mgmt_history="$(check_query_or_false "$DB_MANAGEMENT_OWNER_USER" "$DB_MANAGEMENT_OWNER_PASSWORD" "$DB_MANAGEMENT_NAME" "SELECT to_regclass('public.linear_migration_history') IS NOT NULL;")"
   mgmt_roles="$(check_query_or_false "$DB_MANAGEMENT_READ_WRITE_USER" "$DB_MANAGEMENT_READ_WRITE_PASSWORD" "$DB_MANAGEMENT_NAME" "SELECT EXISTS (SELECT 1 FROM admin_account_role WHERE id = 1 AND role = 'superuser') AND EXISTS (SELECT 1 FROM admin_account_role WHERE id = 2 AND role = 'admin');")"
 
-  if [[ "$app_ext" == "t" && "$mgmt_ext" == "t" && "$app_history" == "t" && "$mgmt_history" == "t" && "$mgmt_roles" == "t" ]]; then
+  if [[ "$app_ext" == "t" && "$app_trgm" == "t" && "$mgmt_ext" == "t" && "$app_history" == "t" && "$mgmt_history" == "t" && "$mgmt_roles" == "t" ]]; then
     break
   fi
 
   if [[ "$attempt" -eq 120 ]]; then
     echo "ERROR: Bootstrap contract failed." >&2
-    echo "app_ext=$app_ext mgmt_ext=$mgmt_ext app_history=$app_history mgmt_history=$mgmt_history mgmt_roles=$mgmt_roles" >&2
+    echo "app_ext=$app_ext app_trgm=$app_trgm mgmt_ext=$mgmt_ext app_history=$app_history mgmt_history=$mgmt_history mgmt_roles=$mgmt_roles" >&2
     docker logs "$CONTAINER_NAME" >&2 || true
     exit 1
   fi
@@ -143,9 +145,9 @@ for attempt in $(seq 1 120); do
   sleep 1
 done
 
-if [[ "$app_ext" != "t" || "$mgmt_ext" != "t" || "$app_history" != "t" || "$mgmt_history" != "t" || "$mgmt_roles" != "t" ]]; then
+if [[ "$app_ext" != "t" || "$app_trgm" != "t" || "$mgmt_ext" != "t" || "$app_history" != "t" || "$mgmt_history" != "t" || "$mgmt_roles" != "t" ]]; then
   echo "ERROR: Bootstrap contract failed." >&2
-  echo "app_ext=$app_ext mgmt_ext=$mgmt_ext app_history=$app_history mgmt_history=$mgmt_history mgmt_roles=$mgmt_roles" >&2
+  echo "app_ext=$app_ext app_trgm=$app_trgm mgmt_ext=$mgmt_ext app_history=$app_history mgmt_history=$mgmt_history mgmt_roles=$mgmt_roles" >&2
   docker logs "$CONTAINER_NAME" >&2 || true
   exit 1
 fi

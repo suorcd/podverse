@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verifies DB bootstrap contract for app and management databases.
 # Checks:
-# - uuid-ossp extension exists
+# - uuid-ossp extension exists (both databases), pg_trgm extension exists (app only)
 # - linear_migration_history table exists
 # - public schema has tables
 # - critical reference rows exist (management admin_account_role)
@@ -77,6 +77,12 @@ check_database_contract() {
   local has_extension
   has_extension="$(run_query "$role_password" "$role_user" "$db_name" "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'uuid-ossp');")"
   assert_equals "${label}: uuid-ossp extension" "$has_extension" "t"
+
+  if [[ "$label" == "app" ]]; then
+    local has_trgm_extension
+    has_trgm_extension="$(run_query "$role_password" "$role_user" "$db_name" "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm');")"
+    assert_equals "${label}: pg_trgm extension" "$has_trgm_extension" "t"
+  fi
 
   local has_history
   has_history="$(run_query "$role_password" "$role_user" "$db_name" "SELECT to_regclass('public.linear_migration_history') IS NOT NULL;")"
